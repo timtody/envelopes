@@ -2,7 +2,7 @@
 
 diesel::table! {
     transactions (id) {
-        id -> Nullable<Integer>,
+        id -> Integer,
         account -> Text,
         date -> Text,
         payee -> Text,

@@ -7,7 +7,7 @@ type Txn = {
   account: string
   date: string // "YYYY-MM-DD"
   payee: string
-  amount_cents: number
+  amountCents: number
 }
 
 const fmtEUR = (cents: number) =>
@@ -15,6 +15,71 @@ const fmtEUR = (cents: number) =>
     style: 'currency',
     currency: 'EUR'
   })
+
+function NewTransactionForm ({
+  account,
+  onNewTransaction
+}: {
+  account: string
+  onNewTransaction: () => void
+}) {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    const payee = formData.get('payee') as string
+    const amount = formData.get('amount') as string
+    const date = formData.get('date') as string
+
+    if (!payee || !amount || !date) {
+      alert('All fields are required')
+    }
+
+    const amountCents = Math.round(parseFloat(amount.replace(',', '.')) * 100)
+    if (isNaN(amountCents)) {
+      alert('Invalid amount')
+    }
+    console.log({ account, date, payee, amountCents })
+    invoke<Txn[]>('create_txn_cmd', { account, date, payee, amountCents })
+      .then(() => {
+        onNewTransaction()
+      })
+      .catch(err => {
+        console.log(err)
+      })
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className='p-2 border-t flex gap-2'>
+      <input
+        type='date'
+        name='date'
+        defaultValue={new Date().toISOString().split('T')[0]}
+        className='input'
+        required
+      />
+      <input
+        type='text'
+        name='payee'
+        placeholder='Payee'
+        className='input'
+        required
+      />
+      <input
+        type='text'
+        name='amount'
+        placeholder='Amount'
+        className='input text-right'
+        required
+      />
+      <button
+        type='submit'
+        className='border px-4 py-1 rounded-lg bg-blue-600 text-white hover:bg-blue-700'
+      >
+        Add
+      </button>
+    </form>
+  )
+}
 
 export default function TransactionsTable ({
   account,
@@ -28,24 +93,18 @@ export default function TransactionsTable ({
   const [rows, setRows] = useState<Txn[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
+  const fetchTransactions = () => {
     if (!account) return
-    let alive = true
     setRows(null)
     setError(null)
+    invoke<Txn[]>('get_txns_by_month_cmd', { year, month })
+      .then(setRows)
+      .catch(e => setError(String(e)))
+  }
 
-    invoke<Txn[]>('get_txns_cmd', { })
-      .then(data => {
-        if (alive) setRows(data)
-      })
-      .catch(e => {
-        if (alive) setError(String(e))
-      })
-
-    return () => {
-      alive = false
-    }
-  }, [account, year, month])
+  useEffect(() => {
+    fetchTransactions()
+  }, [year, month])
 
   if (!account)
     return <div className='text-muted-foreground'>Select an account</div>
@@ -55,6 +114,10 @@ export default function TransactionsTable ({
 
   return (
     <div className='overflow-x-auto'>
+      <NewTransactionForm
+        account={account}
+        onNewTransaction={fetchTransactions}
+      />
       <table className='w-full text-sm'>
         <thead className='bg-muted/50 sticky top-0'>
           <tr>
@@ -70,7 +133,7 @@ export default function TransactionsTable ({
               <td className='p-2'>{t.payee}</td>
               <td
                 className={`p-2 text-right ${
-                  t.amount_cents >= 0 ? 'text-green-600' : 'text-red-600'
+                  t.amountCents >= 0 ? 'text-green-600' : 'text-red-600'
                 }`}
               >
                 {fmtEUR(t.amount_cents)}

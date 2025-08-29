@@ -4,9 +4,9 @@ pub mod schema;
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
-use tauri::{Manager, State};
 use dotenvy::dotenv;
 use std::env;
+use tauri::{Manager, State};
 
 type Pool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
 
@@ -18,7 +18,7 @@ pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 #[tauri::command]
 fn get_txns_cmd(db: State<Db>) -> Result<Vec<models::Transaction>, String> {
     use schema::transactions::dsl::*;
-    let mut conn = db.0.get().map_err(|e| e.to_string())?;
+    let mut conn = db.0.get().map_err(|e: ::r2d2::Error| e.to_string())?;
     transactions
         .order(date.asc())
         .load::<models::Transaction>(&mut conn)
@@ -50,12 +50,34 @@ fn get_txns_by_month_cmd(
         .map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+fn create_txn_cmd(
+    db: State<Db>,
+    account: String,
+    date: String,
+    payee: String,
+    amount_cents: i64,
+) -> Result<(), String> {
+    use schema::transactions;
+    let mut conn = db.0.get().map_err(|e| e.to_string())?;
+
+    diesel::insert_into(transactions::table)
+        .values((
+            transactions::account.eq(account),
+            transactions::date.eq(date),
+            transactions::payee.eq(payee),
+            transactions::amount_cents.eq(amount_cents),
+        ))
+        .execute(&mut conn)
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 /// Initializes and runs the Tauri application, setting up the database and command handlers.
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
             // --- Where to store the DB file ---
-            // Tauri v2:
             let app_data = app.path().app_data_dir()?;
             std::fs::create_dir_all(&app_data)?;
 
@@ -83,7 +105,11 @@ pub fn run() {
             }
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![get_txns_cmd, get_txns_by_month_cmd])
+        .invoke_handler(tauri::generate_handler![
+            get_txns_cmd,
+            get_txns_by_month_cmd,
+            create_txn_cmd,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

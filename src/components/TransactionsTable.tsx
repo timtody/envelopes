@@ -34,10 +34,7 @@ function NewTransactionForm ({
       alert('All fields are required')
     }
 
-    const amountCents = Math.round(parseFloat(amount.replace(',', '.')) * 100)
-    if (isNaN(amountCents)) {
-      alert('Invalid amount')
-    }
+    const amountCents = Number(amount)
     console.log({ account, date, payee, amountCents })
     invoke<Txn[]>('create_txn_cmd', { account, date, payee, amountCents })
       .then(() => {
@@ -133,7 +130,7 @@ export default function TransactionsTable ({
               <td className='p-2'>{t.payee}</td>
               <td
                 className={`p-2 text-right ${
-                  t.amountCents >= 0 ? 'text-green-600' : 'text-red-600'
+                  t.amount_cents >= 0 ? 'text-green-600' : 'text-red-600'
                 }`}
               >
                 {fmtEUR(t.amount_cents)}

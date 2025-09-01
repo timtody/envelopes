@@ -2,7 +2,7 @@ import './App.css'
 import TransactionsTable from './components/TransactionsTable'
 
 function App () {
-  return <TransactionsTable account={"checking"} year={2025} month={8}/>
+  return <TransactionsTable account={"checking"} year={2025} month={9}/>
 }
 
 export default App

@@ -7,7 +7,7 @@ type Txn = {
   account: string
   date: string // "YYYY-MM-DD"
   payee: string
-  amountCents: number
+  amount_cents: number
 }
 
 const fmtEUR = (cents: number) =>

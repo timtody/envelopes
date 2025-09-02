@@ -53,9 +53,9 @@ fn get_txns_by_month_cmd(
 #[tauri::command]
 fn create_txn_cmd(
     db: State<Db>,
-    account: String,
+    account: i32,
     date: String,
-    payee: String,
+    payee: i32,
     amount_cents: i64,
 ) -> Result<(), String> {
     use schema::transactions;

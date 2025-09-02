@@ -1,10 +1,12 @@
 pub mod models;
 pub mod schema;
 
+use crate::schema::{accounts, categories, payees, transactions};
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use dotenvy::dotenv;
+use serde::{Deserialize, Serialize};
 use std::env;
 use tauri::{Manager, State};
 
@@ -14,6 +16,60 @@ pub struct Db(pub Pool);
 
 // Embed everything from /migrations at compile time:
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
+
+#[derive(Queryable, Deserialize, Serialize)]
+pub struct TxnFull {
+    pub id: i32,
+    pub date: String,
+    pub account_name: String,
+    pub payee_name: Option<String>,
+    pub category_name: Option<String>,
+    pub memo: Option<String>,
+    pub amount_cents: i64,
+}
+
+#[tauri::command]
+fn list_txns_by_month_full(
+    db: State<Db>,
+    account_id: i32,
+    year: i32,
+    month: u32,
+) -> Result<Vec<TxnFull>, String> {
+    use accounts::dsl as a;
+    use categories::dsl as c;
+    use payees::dsl as p;
+    use transactions::dsl as t;
+
+    let start = format!("{year:04}-{month:02}-01");
+    let (ny, nm) = if month == 12 {
+        (year + 1, 1)
+    } else {
+        (year, month + 1)
+    };
+    let end = format!("{ny:04}-{nm:02}-01");
+
+    let mut conn = db.0.get().map_err(|e| e.to_string())?;
+
+    t::transactions
+        .inner_join(a::accounts.on(a::id.eq(t::account)))
+        .left_join(p::payees.on(p::id.nullable().eq(t::payee)))
+        .left_join(c::categories.on(c::id.nullable().eq(t::category)))
+        .filter(t::account.eq(account_id))
+        .filter(t::date.ge(&start))
+        .filter(t::date.lt(&end))
+        .order((t::date.asc(), t::id.asc()))
+        .select((
+            t::id,
+            t::date,
+            a::name,
+            p::name.nullable(),
+            c::name.nullable(),
+            t::memo.nullable(),
+            t::amount_cents,
+        ))
+        .load::<TxnFull>(&mut conn)
+        .map_err(|e| e.to_string())
+}
 
 #[tauri::command]
 fn get_txns_cmd(db: State<Db>) -> Result<Vec<models::Transaction>, String> {
@@ -109,6 +165,7 @@ pub fn run() {
             get_txns_cmd,
             get_txns_by_month_cmd,
             create_txn_cmd,
+            list_txns_by_month_full
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

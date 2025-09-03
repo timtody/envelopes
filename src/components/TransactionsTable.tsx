@@ -6,10 +6,9 @@ type TxnFull = {
   id: number
   account_name: number
   date: string // "YYYY-MM-DD"
-  payee_name: string
-  category_name: string
-  amount_cents: number
+  payee: string
   category: string
+  amount_cents: number
 }
 
 const fmtEUR = (cents: number) =>
@@ -19,10 +18,10 @@ const fmtEUR = (cents: number) =>
   })
 
 function NewTransactionForm ({
-  account,
+  accountName,
   onNewTransaction
 }: {
-  account: number
+  accountName: string
   onNewTransaction: () => void
 }) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -37,8 +36,8 @@ function NewTransactionForm ({
     }
 
     const amountCents = Number(amount)
-    console.log({ account, date, payee, amountCents })
-    invoke<TxnFull[]>('create_txn_cmd', { account, date, payee, amountCents })
+    console.log({ accountName, date, payee, amountCents })
+    invoke<TxnFull[]>('create_txn_cmd', { accountName, date, payee, amountCents })
       .then(() => {
         onNewTransaction()
       })
@@ -81,11 +80,11 @@ function NewTransactionForm ({
 }
 
 export default function TransactionsTable ({
-  accountId,
+  accountName,
   year,
   month
 }: {
-  accountId: number | null
+accountName: string
   year: number
   month: number
 }) {
@@ -93,10 +92,10 @@ export default function TransactionsTable ({
   const [error, setError] = useState<string | null>(null)
 
   const fetchTransactions = () => {
-    if (!accountId) return
+    if (!accountName) return
     setRows(null)
     setError(null)
-    invoke<TxnFull[]>('list_txns_by_month_full', { accountId, year, month })
+    invoke<TxnFull[]>('list_txns_by_month_full', { accountName, year, month })
       .then(setRows)
       .catch(e => setError(String(e)))
   }
@@ -105,7 +104,7 @@ export default function TransactionsTable ({
     fetchTransactions()
   }, [year, month])
 
-  if (!accountId)
+  if (!accountName)
     return <div className='text-muted-foreground'>Select an account</div>
   if (error) return <div className='text-red-600'>Error: {error}</div>
   if (!rows)
@@ -114,7 +113,7 @@ export default function TransactionsTable ({
   return (
     <div className='overflow-x-auto'>
       <NewTransactionForm
-        account={accountId}
+        accountName={accountName}
         onNewTransaction={fetchTransactions}
       />
       <table className='w-full text-sm'>
@@ -130,8 +129,8 @@ export default function TransactionsTable ({
           {rows.map(t => (
             <tr key={t.id} className='hover:bg-muted/30'>
               <td className='p-2'>{t.date}</td>
-              <td className='p-2'>{t.payee_name}</td>
-              <td className='p-2'>{t.category_name}</td>
+              <td className='p-2'>{t.payee}</td>
+              <td className='p-2'>{t.category}</td>
               <td
                 className={`p-2 text-right ${
                   t.amount_cents >= 0 ? 'text-green-600' : 'text-red-600'

@@ -46,36 +46,56 @@ export function NewTransactionForm ({
   }
 
   return (
-    <form onSubmit={handleSubmit} className='p-2 border-b'>
-      <div className='flex items-end gap-2'>
+    <form onSubmit={handleSubmit} className='border-b p-2 overflow-x-auto'>
+      <div className='flex items-center gap-2 whitespace-nowrap'>
+        <label className='sr-only' htmlFor='txn-date'>Date</label>
         <input
+          id='txn-date'
           type='date'
           value={date}
           onChange={e => setDate(e.target.value)}
-          className='input p-1'
+          className='h-8 w-[9.75rem] shrink-0 rounded-md border border-gray-300 bg-white px-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-neutral-900/60'
           required
         />
+
+        <label className='sr-only' htmlFor='txn-payee'>Payee</label>
         <input
+          id='txn-payee'
           type='text'
           placeholder='Payee'
           value={payee}
           onChange={e => setPayee(e.target.value)}
-          className='input p-1'
+          className='h-8 min-w-[12rem] flex-1 rounded-md border border-gray-300 bg-white px-2 text-sm shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-neutral-900/60'
           required
         />
+
+        <label className='sr-only' htmlFor='txn-amount'>Amount</label>
         <input
+          id='txn-amount'
           type='text'
+          inputMode='decimal'
           placeholder='Amount'
           value={amount}
           onChange={e => setAmount(e.target.value)}
-          className='input text-right p-1'
+          className='h-8 w-28 shrink-0 rounded-md border border-gray-300 bg-white px-2 text-right text-sm shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-neutral-900/60'
           required
         />
-        <button type='submit' className='btn bg-blue-400 rounded-md p-1' disabled={isSubmitting}>
-          {isSubmitting ? 'Adding...' : 'Add'}
+
+        <button
+          type='submit'
+          className='inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-blue-600 px-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60'
+          disabled={isSubmitting}
+          aria-busy={isSubmitting}
+        >
+          {isSubmitting ? 'Adding…' : 'Add'}
         </button>
       </div>
-      {error && <p className='text-red-600 text-sm mt-1'>{error}</p>}
+
+      {error && (
+        <p className='mt-1 text-xs text-red-600'>
+          {error}
+        </p>
+      )}
     </form>
   )
 }

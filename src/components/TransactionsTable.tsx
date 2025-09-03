@@ -72,7 +72,7 @@ export default function TransactionsTable ({
               <td className='p-2'>{t.category}</td>
               <td
                 className={`p-2 text-right ${
-                  t.amount_cents >= 0 ? 'text-green-600' : 'text-red-600'
+                  t.amount_cents >= 0 ? 'text-green-700' : 'text-red-700'
                 }`}
               >
                 {fmtEUR(t.amount_cents)}

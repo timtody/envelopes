@@ -1,13 +1,14 @@
 // TransactionsTable.tsx
 import { useEffect, useState } from 'react'
 import { invoke } from '@tauri-apps/api/core'
+import { NewTransactionForm } from './NewTransactionForm'
 
 type TxnFull = {
   id: number
-  account_name: number
+  account_name: string
   date: string // "YYYY-MM-DD"
   payee: string
-  category: string
+  category: string | null
   amount_cents: number
 }
 
@@ -17,74 +18,12 @@ const fmtEUR = (cents: number) =>
     currency: 'EUR'
   })
 
-function NewTransactionForm ({
-  accountName,
-  onNewTransaction
-}: {
-  accountName: string
-  onNewTransaction: () => void
-}) {
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const formData = new FormData(e.currentTarget)
-    const payee = formData.get('payee') as string
-    const amount = formData.get('amount') as string
-    const date = formData.get('date') as string
-
-    if (!payee || !amount || !date) {
-      alert('All fields are required')
-    }
-
-    const amountCents = Number(amount)
-    console.log({ accountName, date, payee, amountCents })
-    invoke<TxnFull[]>('create_txn_cmd', { accountName, date, payee, amountCents })
-      .then(() => {
-        onNewTransaction()
-      })
-      .catch(err => {
-        console.log(err)
-      })
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className='p-2 border-t flex gap-2'>
-      <input
-        type='date'
-        name='date'
-        defaultValue={new Date().toISOString().split('T')[0]}
-        className='input'
-        required
-      />
-      <input
-        type='text'
-        name='payee'
-        placeholder='Payee'
-        className='input'
-        required
-      />
-      <input
-        type='text'
-        name='amount'
-        placeholder='Amount'
-        className='input text-right'
-        required
-      />
-      <button
-        type='submit'
-        className='border px-4 py-1 rounded-lg bg-blue-600 text-white hover:bg-blue-700'
-      >
-        Add
-      </button>
-    </form>
-  )
-}
-
 export default function TransactionsTable ({
   accountName,
   year,
   month
 }: {
-accountName: string
+  accountName: string
   year: number
   month: number
 }) {
@@ -102,7 +41,7 @@ accountName: string
 
   useEffect(() => {
     fetchTransactions()
-  }, [year, month])
+  }, [accountName, year, month])
 
   if (!accountName)
     return <div className='text-muted-foreground'>Select an account</div>
@@ -142,7 +81,10 @@ accountName: string
           ))}
           {rows.length === 0 && (
             <tr>
-              <td colSpan={3} className='p-4 text-center text-muted-foreground'>
+              <td
+                colSpan={4}
+                className='p-4 text-center text-muted-foreground'
+              >
                 No transactions this month
               </td>
             </tr>

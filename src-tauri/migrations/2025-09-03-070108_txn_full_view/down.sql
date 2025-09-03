@@ -1,0 +1,1 @@
+DROP VIEW IF EXISTS txn_full_view;

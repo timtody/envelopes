@@ -48,6 +48,19 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+  v_transactions_full (id) {
+    id -> Integer,
+    date -> Text,
+    account -> Text,
+    account_id -> Integer,
+    payee -> Nullable<Text>,
+    category -> Nullable<Text>,
+    memo -> Nullable<Text>,
+    amount_cents -> BigInt,
+  }
+}
+
 diesel::joinable!(budget_allocations -> categories (category));
 diesel::joinable!(transactions -> accounts (account));
 diesel::joinable!(transactions -> categories (category));

@@ -43,3 +43,18 @@ pub struct Category {
     pub id: i32,
     pub name: String,
 }
+
+
+#[derive(Queryable, Selectable, Deserialize, Serialize)]
+#[diesel(table_name = crate::schema::v_transactions_full)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct TxnFull {
+  id: i32,
+  date: String,
+  account: String,
+  account_id: i32,
+  payee: Option<String>,
+  category: Option<String>,
+  memo: Option<String>,
+  amount_cents: i64,
+}

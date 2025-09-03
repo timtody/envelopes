@@ -1,12 +1,10 @@
 pub mod models;
 pub mod schema;
 
-use crate::schema::{accounts, categories, payees, transactions};
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use dotenvy::dotenv;
-use serde::{Deserialize, Serialize};
 use std::env;
 use tauri::{Manager, State};
 
@@ -17,28 +15,14 @@ pub struct Db(pub Pool);
 // Embed everything from /migrations at compile time:
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
-#[derive(Queryable, Deserialize, Serialize)]
-pub struct TxnFull {
-    pub id: i32,
-    pub date: String,
-    pub account_name: String,
-    pub payee_name: Option<String>,
-    pub category_name: Option<String>,
-    pub memo: Option<String>,
-    pub amount_cents: i64,
-}
-
 #[tauri::command]
 fn list_txns_by_month_full(
     db: State<Db>,
-    account_id: i32,
+    account_name: String,
     year: i32,
     month: u32,
-) -> Result<Vec<TxnFull>, String> {
-    use accounts::dsl as a;
-    use categories::dsl as c;
-    use payees::dsl as p;
-    use transactions::dsl as t;
+) -> Result<Vec<models::TxnFull>, String> {
+    use schema::v_transactions_full;
 
     let start = format!("{year:04}-{month:02}-01");
     let (ny, nm) = if month == 12 {
@@ -50,24 +34,15 @@ fn list_txns_by_month_full(
 
     let mut conn = db.0.get().map_err(|e| e.to_string())?;
 
-    t::transactions
-        .inner_join(a::accounts.on(a::id.eq(t::account)))
-        .left_join(p::payees.on(p::id.nullable().eq(t::payee)))
-        .left_join(c::categories.on(c::id.nullable().eq(t::category)))
-        .filter(t::account.eq(account_id))
-        .filter(t::date.ge(&start))
-        .filter(t::date.lt(&end))
-        .order((t::date.asc(), t::id.asc()))
-        .select((
-            t::id,
-            t::date,
-            a::name,
-            p::name.nullable(),
-            c::name.nullable(),
-            t::memo.nullable(),
-            t::amount_cents,
+    v_transactions_full::dsl::v_transactions_full
+        .filter(v_transactions_full::account.eq(account_name))
+        .filter(v_transactions_full::date.ge(&start))
+        .filter(v_transactions_full::date.lt(&end))
+        .order((
+            v_transactions_full::date.asc(),
+            v_transactions_full::id.asc(),
         ))
-        .load::<TxnFull>(&mut conn)
+        .load::<models::TxnFull>(&mut conn)
         .map_err(|e| e.to_string())
 }
 
@@ -81,8 +56,7 @@ fn get_txns_cmd(db: State<Db>) -> Result<Vec<models::Transaction>, String> {
         .map_err(|e| e.to_string())
 }
 
-#[tauri::command]
-fn get_txns_by_month_cmd(
+fn list_txns_by_month(
     db: State<Db>,
     year: i32,
     month: i32,
@@ -107,7 +81,15 @@ fn get_txns_by_month_cmd(
 }
 
 #[tauri::command]
-fn create_txn_cmd(
+fn list_txns_by_month_cmd(
+    db: State<Db>,
+    year: i32,
+    month: i32,
+) -> Result<Vec<models::Transaction>, String> {
+    list_txns_by_month(db, year, month)
+}
+
+fn create_txn(
     db: State<Db>,
     account: i32,
     date: String,
@@ -127,6 +109,17 @@ fn create_txn_cmd(
         .execute(&mut conn)
         .map_err(|e| e.to_string())?;
     Ok(())
+}
+
+#[tauri::command]
+fn create_txn_cmd(
+    db: State<Db>,
+    account: i32,
+    date: String,
+    payee: i32,
+    amount_cents: i64,
+) -> Result<(), String> {
+    create_txn(db, account, date, payee, amount_cents)
 }
 
 /// Initializes and runs the Tauri application, setting up the database and command handlers.
@@ -163,7 +156,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             get_txns_cmd,
-            get_txns_by_month_cmd,
+            list_txns_by_month_cmd,
             create_txn_cmd,
             list_txns_by_month_full
         ])

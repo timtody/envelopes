@@ -42,7 +42,6 @@ The minimal version of Envelopes should allow me to:
 
 ## Done
 
-_(fill this section as you go)_  
 - [x] Set up Diesel with migrations  
 - [x] Basic schema: accounts, payees, categories, budget_allocations, transactions  
 - [x] Seed migration with fake data

@@ -1,22 +1,37 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 
-export function NewTransactionForm ({
-  accountName,
+type Account = {
+  id: number
+  name: string
+}
+
+export function NewTransactionForm({
   onNewTransaction
 }: {
-  accountName: number
   onNewTransaction: () => void
 }) {
+  const [accounts, setAccounts] = useState<Account[]>([])
+  const [accountId, setAccountId] = useState('')
   const [payeeName, setPayee] = useState('')
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [category, setCategory] = useState('')
+  const [memo, setMemo] = useState('')
+  const [cleared, setCleared] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Fetch accounts when component mounts
+  useEffect(() => {
+    invoke<Account[]>('list_accounts_cmd')
+      .then(setAccounts)
+      .catch(e => setError(String(e)))
+  }, [])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!payeeName || !amount || isSubmitting) return
+    if (!accountId || !payeeName || !amount || isSubmitting) return
 
     const amountCents = Math.round(parseFloat(amount.replace(',', '.')) * 100)
     if (isNaN(amountCents)) {
@@ -26,21 +41,23 @@ export function NewTransactionForm ({
 
     setIsSubmitting(true)
     setError(null)
-    const category = null
-    const memo = null
 
     try {
       await invoke('create_txn_cmd', {
-        accountName,
+        accountName: accounts.find(a => a.id === parseInt(accountId))?.name,
         date,
         payeeName,
-        category,
-        memo,
-        amountCents
+        category: category || null,
+        memo: memo || null,
+        amountCents,
+        cleared: cleared ? 1 : 0
       })
       // Reset form on success
       setPayee('')
       setAmount('')
+      setCategory('')
+      setMemo('')
+      setCleared(false)
       onNewTransaction()
     } catch (err) {
       setError(String(err))
@@ -49,59 +66,132 @@ export function NewTransactionForm ({
     }
   }
 
+  const inputClasses = 'h-8 rounded-md border border-gray-300 bg-white px-2 text-sm shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-neutral-900/60'
+
   return (
-    <form onSubmit={handleSubmit} className='border-b p-2 overflow-x-auto'>
-      <div className='flex items-center gap-2 whitespace-nowrap'>
-        <label className='sr-only' htmlFor='txn-date'>
-          Date
-        </label>
-        <input
-          id='txn-date'
-          type='date'
-          value={date}
-          onChange={e => setDate(e.target.value)}
-          className='h-8 w-[9.75rem] shrink-0 rounded-md border border-gray-300 bg-white px-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-neutral-900/60'
-          required
-        />
+    <form onSubmit={handleSubmit} className='w-full border-b p-4'>
+      <div className='flex w-full flex-nowrap items-end gap-3 overflow-x-auto'>
+        <div className='flex min-w-[12rem] flex-col gap-1'>
+          <label htmlFor='txn-account' className='text-sm font-medium text-gray-700'>
+            Account
+          </label>
+          <select
+            id='txn-account'
+            value={accountId}
+            onChange={e => setAccountId(e.target.value)}
+            className={`${inputClasses} w-full`}
+            required
+          >
+            <option value=''>Select account...</option>
+            {accounts.map(account => (
+              <option key={account.id} value={account.id}>
+                {account.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <label className='sr-only' htmlFor='txn-payee'>
-          Payee
-        </label>
-        <input
-          id='txn-payee'
-          type='text'
-          placeholder='Payee'
-          value={payeeName}
-          onChange={e => setPayee(e.target.value)}
-          className='h-8 min-w-[12rem] flex-1 rounded-md border border-gray-300 bg-white px-2 text-sm shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-neutral-900/60'
-          required
-        />
+        <div className='flex min-w-[10rem] flex-col gap-1'>
+          <label htmlFor='txn-date' className='text-sm font-medium text-gray-700'>
+            Date
+          </label>
+          <input
+            id='txn-date'
+            type='date'
+            value={date}
+            onChange={e => setDate(e.target.value)}
+            className={`${inputClasses} w-full`}
+            required
+          />
+        </div>
 
-        <label className='sr-only' htmlFor='txn-amount'>
-          Amount
-        </label>
-        <input
-          id='txn-amount'
-          type='text'
-          inputMode='decimal'
-          placeholder='Amount'
-          value={amount}
-          onChange={e => setAmount(e.target.value)}
-          className='h-8 w-28 shrink-0 rounded-md border border-gray-300 bg-white px-2 text-right text-sm shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-neutral-900/60'
-          required
-        />
+        <div className='flex min-w-[14rem] flex-1 flex-col gap-1'>
+          <label htmlFor='txn-payee' className='text-sm font-medium text-gray-700'>
+            Payee
+          </label>
+          <input
+            id='txn-payee'
+            type='text'
+            placeholder='e.g. Grocery Store'
+            value={payeeName}
+            onChange={e => setPayee(e.target.value)}
+            className={`${inputClasses} w-full`}
+            required
+          />
+        </div>
+
+        <div className='flex min-w-[12rem] flex-col gap-1'>
+          <label htmlFor='txn-category' className='text-sm font-medium text-gray-700'>
+            Category
+          </label>
+          <input
+            id='txn-category'
+            type='text'
+            placeholder='e.g. Groceries'
+            value={category}
+            onChange={e => setCategory(e.target.value)}
+            className={`${inputClasses} w-full`}
+          />
+        </div>
+
+        <div className='flex min-w-[8rem] flex-col gap-1'>
+          <label htmlFor='txn-amount' className='text-sm font-medium text-gray-700'>
+            Amount
+          </label>
+          <input
+            id='txn-amount'
+            type='text'
+            inputMode='decimal'
+            placeholder='-12.34'
+            value={amount}
+            onChange={e => setAmount(e.target.value)}
+            className={`${inputClasses} w-full text-right`}
+            required
+          />
+        </div>
+
+        <div className='flex min-w-[12rem] flex-1 flex-col gap-1'>
+          <label htmlFor='txn-memo' className='text-sm font-medium text-gray-700'>
+            Memo
+          </label>
+          <input
+            id='txn-memo'
+            type='text'
+            placeholder='Optional note'
+            value={memo}
+            onChange={e => setMemo(e.target.value)}
+            className={`${inputClasses} w-full`}
+          />
+        </div>
+
+        <div className='flex min-w-[6rem] items-center gap-2 pt-5'>
+          <input
+            id='txn-cleared'
+            type='checkbox'
+            checked={cleared}
+            onChange={e => setCleared(e.target.checked)}
+            className='h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500'
+          />
+          <label htmlFor='txn-cleared' className='text-sm font-medium text-gray-700'>
+            Cleared
+          </label>
+        </div>
 
         <button
           type='submit'
-          className='inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-blue-600 px-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60'
+          className='inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60'
           disabled={isSubmitting}
           aria-busy={isSubmitting}
         >
-          {isSubmitting ? 'Adding…' : 'Add'}
+          {isSubmitting ? 'Adding…' : 'Add Transaction'}
         </button>
       </div>
 
-      {error && <p className='mt-1 text-xs text-red-600'>{error}</p>}
+      {error && (
+        <p className='text-sm text-red-600' role='alert'>
+          {error}
+        </p>
+      )}
     </form>
   )
 }

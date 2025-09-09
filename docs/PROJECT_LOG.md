@@ -10,7 +10,7 @@ Keep it simple, keep it close to the code.
 The minimal version of Envelopes should allow me to:
 
 - [ ] Create accounts
-- [ ] Add transactions (with payee + category)
+- [x] Add transactions (with payee + category)
 - [ ] View transactions per account/month
 - [ ] Assign budget amounts to categories per month
 - [ ] View category balances (Assigned – Spent)
@@ -19,9 +19,6 @@ The minimal version of Envelopes should allow me to:
 
 ## Current Focus
 
-- [ ] Finish Quick Add form for transactions
-- [ ] Hook up `list_txns_by_month_cmd` to table
-- [ ] Seed database with sample accounts/payees/categories
 
 ---
 

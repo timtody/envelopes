@@ -27,6 +27,7 @@ The minimal version of Envelopes should allow me to:
 
 ## Backlog
 
+- Debounce payee inputs
 - Autocomplete payee field (create new payees on the fly)
 - Undo option after adding a transaction
 - Transfers (account → account)

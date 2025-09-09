@@ -11,7 +11,7 @@ type Category = {
   name: string
 }
 
-export function NewTransactionForm({
+export function NewTransactionForm ({
   onNewTransaction
 }: {
   onNewTransaction: () => void
@@ -42,7 +42,7 @@ export function NewTransactionForm({
     e.preventDefault()
     if (!accountId || !payeeName || !amount || isSubmitting) return
 
-    const amountCents = Math.round(parseFloat(amount.replace(',', '.')) * 100)
+    const amountCents = Number(amount)
     if (isNaN(amountCents)) {
       setError('Invalid amount')
       return
@@ -75,13 +75,17 @@ export function NewTransactionForm({
     }
   }
 
-  const inputClasses = 'h-8 rounded-md border border-gray-300 bg-white px-2 text-sm shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-neutral-900/60'
+  const inputClasses =
+    'h-8 rounded-md border border-gray-300 bg-white px-2 text-sm shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-neutral-900/60'
 
   return (
     <form onSubmit={handleSubmit} className='w-full border-b p-4'>
       <div className='flex w-full flex-nowrap items-end gap-3 overflow-x-auto'>
         <div className='flex min-w-[12rem] flex-col gap-1'>
-          <label htmlFor='txn-account' className='text-sm font-medium text-gray-700'>
+          <label
+            htmlFor='txn-account'
+            className='text-sm font-medium text-gray-700'
+          >
             Account
           </label>
           <select
@@ -101,7 +105,10 @@ export function NewTransactionForm({
         </div>
 
         <div className='flex min-w-[10rem] flex-col gap-1'>
-          <label htmlFor='txn-date' className='text-sm font-medium text-gray-700'>
+          <label
+            htmlFor='txn-date'
+            className='text-sm font-medium text-gray-700'
+          >
             Date
           </label>
           <input
@@ -115,7 +122,10 @@ export function NewTransactionForm({
         </div>
 
         <div className='flex min-w-[14rem] flex-1 flex-col gap-1'>
-          <label htmlFor='txn-payee' className='text-sm font-medium text-gray-700'>
+          <label
+            htmlFor='txn-payee'
+            className='text-sm font-medium text-gray-700'
+          >
             Payee
           </label>
           <input
@@ -130,7 +140,10 @@ export function NewTransactionForm({
         </div>
 
         <div className='flex min-w-[12rem] flex-col gap-1'>
-          <label htmlFor='txn-category' className='text-sm font-medium text-gray-700'>
+          <label
+            htmlFor='txn-category'
+            className='text-sm font-medium text-gray-700'
+          >
             Category
           </label>
           <select
@@ -149,7 +162,10 @@ export function NewTransactionForm({
         </div>
 
         <div className='flex min-w-[8rem] flex-col gap-1'>
-          <label htmlFor='txn-amount' className='text-sm font-medium text-gray-700'>
+          <label
+            htmlFor='txn-amount'
+            className='text-sm font-medium text-gray-700'
+          >
             Amount
           </label>
           <input
@@ -165,7 +181,10 @@ export function NewTransactionForm({
         </div>
 
         <div className='flex min-w-[12rem] flex-1 flex-col gap-1'>
-          <label htmlFor='txn-memo' className='text-sm font-medium text-gray-700'>
+          <label
+            htmlFor='txn-memo'
+            className='text-sm font-medium text-gray-700'
+          >
             Memo
           </label>
           <input
@@ -186,7 +205,10 @@ export function NewTransactionForm({
             onChange={e => setCleared(e.target.checked)}
             className='h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500'
           />
-          <label htmlFor='txn-cleared' className='text-sm font-medium text-gray-700'>
+          <label
+            htmlFor='txn-cleared'
+            className='text-sm font-medium text-gray-700'
+          >
             Cleared
           </label>
         </div>

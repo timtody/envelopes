@@ -129,7 +129,7 @@ fn list_txns_by_month_full_cmd(
         .filter(v_transactions_full::date.ge(&start))
         .filter(v_transactions_full::date.lt(&end))
         .order((
-            v_transactions_full::date.asc(),
+            v_transactions_full::date.desc(),
             v_transactions_full::id.asc(),
         ))
         .load::<models::TxnFull>(&mut conn)

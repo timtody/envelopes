@@ -17,39 +17,7 @@ pub struct Db {
 // Embed everything from /migrations at compile time:
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
-#[tauri::command]
-fn list_txns_by_month_full_cmd(
-    db: State<Db>,
-    account_name: String,
-    year: i32,
-    month: u32,
-) -> Result<Vec<models::TxnFull>, String> {
-    use schema::v_transactions_full;
-
-    let start = format!("{year:04}-{month:02}-01");
-    let (ny, nm) = if month == 12 {
-        (year + 1, 1)
-    } else {
-        (year, month + 1)
-    };
-    let end = format!("{ny:04}-{nm:02}-01");
-
-    let mut conn = db.pool.get().map_err(|e| e.to_string())?;
-
-    v_transactions_full::dsl::v_transactions_full
-        .filter(v_transactions_full::account.eq(account_name))
-        .filter(v_transactions_full::date.ge(&start))
-        .filter(v_transactions_full::date.lt(&end))
-        .order((
-            v_transactions_full::date.asc(),
-            v_transactions_full::id.asc(),
-        ))
-        .load::<models::TxnFull>(&mut conn)
-        .map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-fn get_txns_cmd(db: State<Db>) -> Result<Vec<models::Transaction>, String> {
+fn get_txns(db: State<Db>) -> Result<Vec<models::Transaction>, String> {
     use schema::transactions::dsl::*;
     let mut conn = db.pool.get().map_err(|e: ::r2d2::Error| e.to_string())?;
     transactions
@@ -82,7 +50,8 @@ fn list_txns_by_month(
         .map_err(|e| e.to_string())
 }
 
-fn create_txn(
+#[tauri::command]
+fn create_txn_cmd(
     db: State<Db>,
     account_name: String,
     date: String,
@@ -137,18 +106,35 @@ fn create_txn(
 }
 
 #[tauri::command]
-fn create_txn_cmd(
+fn list_txns_by_month_full_cmd(
     db: State<Db>,
     account_name: String,
-    date: String,
-    payee_name: String,
-    category: Option<i32>,
-    memo: Option<String>,
-    amount_cents: i64,
-) -> Result<(), String> {
-    create_txn(db, account_name, date, payee_name, category, memo, amount_cents)
-}
+    year: i32,
+    month: u32,
+) -> Result<Vec<models::TxnFull>, String> {
+    use schema::v_transactions_full;
 
+    let start = format!("{year:04}-{month:02}-01");
+    let (ny, nm) = if month == 12 {
+        (year + 1, 1)
+    } else {
+        (year, month + 1)
+    };
+    let end = format!("{ny:04}-{nm:02}-01");
+
+    let mut conn = db.pool.get().map_err(|e| e.to_string())?;
+
+    v_transactions_full::dsl::v_transactions_full
+        .filter(v_transactions_full::account.eq(account_name))
+        .filter(v_transactions_full::date.ge(&start))
+        .filter(v_transactions_full::date.lt(&end))
+        .order((
+            v_transactions_full::date.asc(),
+            v_transactions_full::id.asc(),
+        ))
+        .load::<models::TxnFull>(&mut conn)
+        .map_err(|e| e.to_string())
+}
 /// Initializes and runs the Tauri application, setting up the database and command handlers.
 pub fn run() {
     tauri::Builder::default()

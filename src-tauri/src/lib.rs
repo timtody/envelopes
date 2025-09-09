@@ -10,13 +10,15 @@ use tauri::{Manager, State};
 
 type Pool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
 
-pub struct Db(pub Pool);
+pub struct Db {
+    pub pool: Pool,
+}
 
 // Embed everything from /migrations at compile time:
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
 #[tauri::command]
-fn list_txns_by_month_full(
+fn list_txns_by_month_full_cmd(
     db: State<Db>,
     account_name: String,
     year: i32,
@@ -32,7 +34,7 @@ fn list_txns_by_month_full(
     };
     let end = format!("{ny:04}-{nm:02}-01");
 
-    let mut conn = db.0.get().map_err(|e| e.to_string())?;
+    let mut conn = db.pool.get().map_err(|e| e.to_string())?;
 
     v_transactions_full::dsl::v_transactions_full
         .filter(v_transactions_full::account.eq(account_name))
@@ -49,7 +51,7 @@ fn list_txns_by_month_full(
 #[tauri::command]
 fn get_txns_cmd(db: State<Db>) -> Result<Vec<models::Transaction>, String> {
     use schema::transactions::dsl::*;
-    let mut conn = db.0.get().map_err(|e: ::r2d2::Error| e.to_string())?;
+    let mut conn = db.pool.get().map_err(|e: ::r2d2::Error| e.to_string())?;
     transactions
         .order(date.asc())
         .load::<models::Transaction>(&mut conn)
@@ -72,7 +74,7 @@ fn list_txns_by_month(
     let end = format!("{ny:04}-{nm:02}-01");
 
     println!("{} {}", start, end);
-    let mut conn = db.0.get().map_err(|e| e.to_string())?;
+    let mut conn = db.pool.get().map_err(|e| e.to_string())?;
     transactions
         .filter(date.ge(start).and(date.lt(end)))
         .order(date.asc())
@@ -80,46 +82,71 @@ fn list_txns_by_month(
         .map_err(|e| e.to_string())
 }
 
-#[tauri::command]
-fn list_txns_by_month_cmd(
-    db: State<Db>,
-    year: i32,
-    month: i32,
-) -> Result<Vec<models::Transaction>, String> {
-    list_txns_by_month(db, year, month)
-}
-
 fn create_txn(
     db: State<Db>,
-    account: i32,
+    account_name: String,
     date: String,
-    payee: i32,
+    payee_name: String,
+    category: Option<i32>,
+    memo: Option<String>,
     amount_cents: i64,
 ) -> Result<(), String> {
-    use schema::transactions;
-    let mut conn = db.0.get().map_err(|e| e.to_string())?;
+    use schema::{accounts, payees, transactions};
+    let mut conn = db.pool.get().map_err(|e| e.to_string())?;
 
+    // First get the account_id
+    let account_id = accounts::dsl::accounts
+        .filter(accounts::name.eq(&account_name))
+        .select(accounts::id)
+        .first::<i32>(&mut conn)
+        .map_err(|e| e.to_string())?;
+
+    // Try to find payee first, if not found create it
+    let payee_id = match payees::dsl::payees
+        .filter(payees::name.eq(&payee_name))
+        .select(payees::id)
+        .first::<i32>(&mut conn)
+    {
+        Ok(id) => id,
+        Err(diesel::NotFound) => {
+            // Payee doesn't exist, create it
+            diesel::insert_into(payees::table)
+                .values(payees::name.eq(&payee_name))
+                .returning(payees::id)
+                .get_result(&mut conn)
+                .map_err(|e| e.to_string())?
+        }
+        Err(e) => return Err(e.to_string()),
+    };
+
+    // Create the transaction with the payee_id
     diesel::insert_into(transactions::table)
         .values((
-            transactions::account.eq(account),
+            transactions::account.eq(account_id),
             transactions::date.eq(date),
-            transactions::payee.eq(payee),
+            transactions::payee.eq(payee_id),
+            transactions::category.eq(category),
+            transactions::memo.eq(memo),
             transactions::amount_cents.eq(amount_cents),
+            transactions::cleared.eq(0),
         ))
         .execute(&mut conn)
         .map_err(|e| e.to_string())?;
+
     Ok(())
 }
 
 #[tauri::command]
 fn create_txn_cmd(
     db: State<Db>,
-    account: i32,
+    account_name: String,
     date: String,
-    payee: i32,
+    payee_name: String,
+    category: Option<i32>,
+    memo: Option<String>,
     amount_cents: i64,
 ) -> Result<(), String> {
-    create_txn(db, account, date, payee, amount_cents)
+    create_txn(db, account_name, date, payee_name, category, memo, amount_cents)
 }
 
 /// Initializes and runs the Tauri application, setting up the database and command handlers.
@@ -135,7 +162,15 @@ pub fn run() {
 
             // --- Build a small connection pool ---
             let manager = ConnectionManager::<SqliteConnection>::new(database_url);
-            let pool = r2d2::Pool::builder().max_size(4).build(manager)?;
+            let pool = r2d2::Pool::builder()
+                .max_size(
+                    env::var("MAX_POOL_SIZE")
+                        .expect("MAX_POOL_SIZE must be set")
+                        .parse::<u32>()
+                        .ok()
+                        .expect("MAX_POOL_SIZE must be a valid u32"),
+                )
+                .build(manager)?;
 
             {
                 // --- One-time connection for PRAGMAs + migrations ---
@@ -149,16 +184,14 @@ pub fn run() {
                     .map_err(|e| format!("migrations failed: {e}"))?;
             }
 
-            if !app.manage(Db(pool)) {
+            if !app.manage(Db { pool: pool }) {
                 return Err("Failed to manage database state".into());
             }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            get_txns_cmd,
-            list_txns_by_month_cmd,
             create_txn_cmd,
-            list_txns_by_month_full
+            list_txns_by_month_full_cmd
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

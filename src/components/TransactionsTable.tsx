@@ -5,7 +5,7 @@ import { NewTransactionForm } from './NewTransactionForm'
 
 type TxnFull = {
   id: number
-  account_name: string
+  accountName: string
   date: string // "YYYY-MM-DD"
   payee: string
   category: string | null
@@ -34,7 +34,7 @@ export default function TransactionsTable ({
     if (!accountName) return
     setRows(null)
     setError(null)
-    invoke<TxnFull[]>('list_txns_by_month_full', { accountName, year, month })
+    invoke<TxnFull[]>('list_txns_by_month_full_cmd', { accountName, year, month })
       .then(setRows)
       .catch(e => setError(String(e)))
   }

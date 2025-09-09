@@ -5,10 +5,10 @@ export function NewTransactionForm ({
   accountName,
   onNewTransaction
 }: {
-  accountName: string
+  accountName: number
   onNewTransaction: () => void
 }) {
-  const [payee, setPayee] = useState('')
+  const [payeeName, setPayee] = useState('')
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [error, setError] = useState<string | null>(null)
@@ -16,7 +16,7 @@ export function NewTransactionForm ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!payee || !amount || isSubmitting) return
+    if (!payeeName || !amount || isSubmitting) return
 
     const amountCents = Math.round(parseFloat(amount.replace(',', '.')) * 100)
     if (isNaN(amountCents)) {
@@ -26,12 +26,16 @@ export function NewTransactionForm ({
 
     setIsSubmitting(true)
     setError(null)
+    const category = null
+    const memo = null
 
     try {
       await invoke('create_txn_cmd', {
         accountName,
         date,
-        payee,
+        payeeName,
+        category,
+        memo,
         amountCents
       })
       // Reset form on success
@@ -48,7 +52,9 @@ export function NewTransactionForm ({
   return (
     <form onSubmit={handleSubmit} className='border-b p-2 overflow-x-auto'>
       <div className='flex items-center gap-2 whitespace-nowrap'>
-        <label className='sr-only' htmlFor='txn-date'>Date</label>
+        <label className='sr-only' htmlFor='txn-date'>
+          Date
+        </label>
         <input
           id='txn-date'
           type='date'
@@ -58,18 +64,22 @@ export function NewTransactionForm ({
           required
         />
 
-        <label className='sr-only' htmlFor='txn-payee'>Payee</label>
+        <label className='sr-only' htmlFor='txn-payee'>
+          Payee
+        </label>
         <input
           id='txn-payee'
           type='text'
           placeholder='Payee'
-          value={payee}
+          value={payeeName}
           onChange={e => setPayee(e.target.value)}
           className='h-8 min-w-[12rem] flex-1 rounded-md border border-gray-300 bg-white px-2 text-sm shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-neutral-900/60'
           required
         />
 
-        <label className='sr-only' htmlFor='txn-amount'>Amount</label>
+        <label className='sr-only' htmlFor='txn-amount'>
+          Amount
+        </label>
         <input
           id='txn-amount'
           type='text'
@@ -91,11 +101,7 @@ export function NewTransactionForm ({
         </button>
       </div>
 
-      {error && (
-        <p className='mt-1 text-xs text-red-600'>
-          {error}
-        </p>
-      )}
+      {error && <p className='mt-1 text-xs text-red-600'>{error}</p>}
     </form>
   )
 }

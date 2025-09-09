@@ -135,6 +135,26 @@ fn list_txns_by_month_full_cmd(
         .load::<models::TxnFull>(&mut conn)
         .map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+fn list_accounts_cmd(db: State<Db>) -> Result<Vec<models::Account>, String> {
+    use schema::accounts::dsl::*;
+    let mut conn = db.pool.get().map_err(|e| e.to_string())?;
+    accounts
+        .order(name.asc())
+        .load::<models::Account>(&mut conn)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn list_categories_cmd(db: State<Db>) -> Result<Vec<models::Category>, String> {
+    use schema::categories::dsl::*;
+    let mut conn = db.pool.get().map_err(|e| e.to_string())?;
+    categories
+        .order(name.asc())
+        .load::<models::Category>(&mut conn)
+        .map_err(|e| e.to_string())
+}
 /// Initializes and runs the Tauri application, setting up the database and command handlers.
 pub fn run() {
     tauri::Builder::default()
@@ -177,7 +197,9 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             create_txn_cmd,
-            list_txns_by_month_full_cmd
+            list_txns_by_month_full_cmd,
+            list_accounts_cmd,
+            list_categories_cmd
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

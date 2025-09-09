@@ -6,6 +6,11 @@ type Account = {
   name: string
 }
 
+type Category = {
+  id: number
+  name: string
+}
+
 export function NewTransactionForm({
   onNewTransaction
 }: {
@@ -16,16 +21,20 @@ export function NewTransactionForm({
   const [payeeName, setPayee] = useState('')
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
-  const [category, setCategory] = useState('')
+  const [categories, setCategories] = useState<Category[]>([])
+  const [categoryId, setCategoryId] = useState('')
   const [memo, setMemo] = useState('')
   const [cleared, setCleared] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Fetch accounts when component mounts
+  // Fetch accounts and categories when component mounts
   useEffect(() => {
     invoke<Account[]>('list_accounts_cmd')
       .then(setAccounts)
+      .catch(e => setError(String(e)))
+    invoke<Category[]>('list_categories_cmd')
+      .then(setCategories)
       .catch(e => setError(String(e)))
   }, [])
 
@@ -47,7 +56,7 @@ export function NewTransactionForm({
         accountName: accounts.find(a => a.id === parseInt(accountId))?.name,
         date,
         payeeName,
-        category: category || null,
+        category: categoryId ? parseInt(categoryId) : null,
         memo: memo || null,
         amountCents,
         cleared: cleared ? 1 : 0
@@ -55,7 +64,7 @@ export function NewTransactionForm({
       // Reset form on success
       setPayee('')
       setAmount('')
-      setCategory('')
+      setCategoryId('')
       setMemo('')
       setCleared(false)
       onNewTransaction()
@@ -124,14 +133,19 @@ export function NewTransactionForm({
           <label htmlFor='txn-category' className='text-sm font-medium text-gray-700'>
             Category
           </label>
-          <input
+          <select
             id='txn-category'
-            type='text'
-            placeholder='e.g. Groceries'
-            value={category}
-            onChange={e => setCategory(e.target.value)}
+            value={categoryId}
+            onChange={e => setCategoryId(e.target.value)}
             className={`${inputClasses} w-full`}
-          />
+          >
+            <option value=''>Uncategorized</option>
+            {categories.map(cat => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className='flex min-w-[8rem] flex-col gap-1'>

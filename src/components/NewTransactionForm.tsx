@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
 import { invoke } from '@tauri-apps/api/core'
+import { Button } from '@/components/ui/button'
+import { Input } from "@/components/ui/input"
+import { Select } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
+
 
 type Account = {
   id: number
@@ -111,7 +116,7 @@ export function NewTransactionForm ({
           >
             Date
           </label>
-          <input
+          <Input
             id='txn-date'
             type='date'
             value={date}
@@ -128,7 +133,7 @@ export function NewTransactionForm ({
           >
             Payee
           </label>
-          <input
+          <Input
             id='txn-payee'
             type='text'
             placeholder='e.g. Grocery Store'
@@ -168,7 +173,7 @@ export function NewTransactionForm ({
           >
             Amount
           </label>
-          <input
+          <Input
             id='txn-amount'
             type='text'
             inputMode='decimal'
@@ -187,7 +192,7 @@ export function NewTransactionForm ({
           >
             Memo
           </label>
-          <input
+          <Input
             id='txn-memo'
             type='text'
             placeholder='Optional note'
@@ -198,12 +203,12 @@ export function NewTransactionForm ({
         </div>
 
         <div className='flex min-w-[6rem] items-center gap-2 pt-5'>
-          <input
-            id='txn-cleared'
-            type='checkbox'
-            checked={cleared}
-            onChange={e => setCleared(e.target.checked)}
-            className='h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500'
+          <Checkbox
+            // id='txn-cleared'
+            // type='checkbox'
+            // checked={cleared}
+            // onChange={e => setCleared(e.target.checked)}
+            // className='h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500'
           />
           <label
             htmlFor='txn-cleared'
@@ -213,14 +218,7 @@ export function NewTransactionForm ({
           </label>
         </div>
 
-        <button
-          type='submit'
-          className='inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60'
-          disabled={isSubmitting}
-          aria-busy={isSubmitting}
-        >
-          {isSubmitting ? 'Adding…' : 'Add Transaction'}
-        </button>
+        <Button>{isSubmitting ? 'Adding…' : 'Add Transaction'}</Button>
       </div>
 
       {error && (

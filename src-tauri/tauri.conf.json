@@ -12,9 +12,14 @@
   "app": {
     "windows": [
       {
-        "title": "envelopes",
-        "width": 800,
-        "height": 600
+        "title": "",
+        "width": 1450,
+        "height": 800,
+        "decorations": true,
+        "transparent": false,
+        "fullscreen": false,
+        "resizable": true,
+        "titleBarStyle": "Overlay"
       }
     ],
     "security": {

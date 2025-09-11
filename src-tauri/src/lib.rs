@@ -147,6 +147,7 @@ fn list_txns(db: State<Db>, year: i32) -> Result<Vec<models::TxnFull>, String> {
         ))
         .limit(100)
         .load::<models::TxnFull>(&mut conn)
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]

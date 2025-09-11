@@ -16,6 +16,7 @@ The minimal version of Envelopes should allow me to:
 ## Current Focus
 
 - [ ] Switch accounts from side bar
+  - [ ] Show accounts in side bar
   - [ ] Selected account lives in app state
   - [ ] Fast: filter transactions in Frontend?
     - I see a high risk here: When scrolling in virtual

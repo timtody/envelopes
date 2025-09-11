@@ -47,7 +47,7 @@ export default function TransactionsTable ({
 
   if (!accountName)
     return <div className='text-muted-foreground'>Select an account</div>
-  if (error) return <div className='text-red-600'>Error: {error}</div>
+  if (error) return <div className='text-destructive'>Error: {error}</div>
   if (!rows)
     return <div className='animate-pulse text-muted-foreground'>Loading…</div>
 
@@ -77,7 +77,7 @@ export default function TransactionsTable ({
               <td className='p-2'>{t.memo ?? ''}</td>
               <td
                 className={`p-2 text-right ${
-                  t.amount_cents >= 0 ? 'text-green-700' : 'text-red-700'
+                  t.amount_cents >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                 }`}
               >
                 {fmtEUR(t.amount_cents)}

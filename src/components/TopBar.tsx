@@ -36,10 +36,10 @@ export default function TopBar ({
       <div
         data-tauri-drag-region
         className={`
-          h-10 flex items-center gap-2 px-3
+          h-10 flex items-center gap-2 px-3 min-w-0
           select-none
           ${
-            sidebarOpen ? 'pl-3' : 'pl-[84px]'
+            sidebarOpen ? 'pl-3' : 'pl-3 sm:pl-[84px]'
           }
           bg-background/80 backdrop-blur-sm border-b border-border
           flex-shrink-0
@@ -50,7 +50,7 @@ export default function TopBar ({
         }}
       >
         <div
-          className='flex items-center gap-2'
+          className='flex items-center gap-2 min-w-0'
           data-tauri-drag-region={false}
         >
           {/* Toggle button - only shows when sidebar is closed */}

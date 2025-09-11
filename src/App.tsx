@@ -17,13 +17,13 @@ function App () {
         selectedAccount={account}
         selectAccount={selectAccount}
       />
-      <div className='flex-1'>
+      <div className='flex-1 min-w-0'>
         <TopBar
           sidebarOpen={sidebarOpen}
           onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
         >
           <TransactionsTable
-            accountName={account?.name}
+            accountName={account?.name || ''}
             year={2025}
             month={9}
           />

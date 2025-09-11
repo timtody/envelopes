@@ -58,10 +58,9 @@ export default function Sidebar ({
     <div
       className={`
         bg-sidebar/95 backdrop-blur-sm border-r border-sidebar-border
-        transition-all ease-in-out
+        transition-all ease-in-out flex-shrink-0
         ${isOpen ? 'w-64' : 'w-0'}
-        overflow-hidden flex-shrink-0
-        relative
+        overflow-hidden relative
       `}
       style={{
         transitionDuration: `${animationDuration}ms`

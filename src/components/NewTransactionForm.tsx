@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import { Button } from '@/components/ui/button'
-import { Input } from "@/components/ui/input"
-import { Select } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-
+import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 
 type Account = {
   id: number
@@ -85,140 +83,142 @@ export function NewTransactionForm ({
 
   return (
     <form onSubmit={handleSubmit} className='w-full border-b p-4'>
-      <div className='flex w-full flex-nowrap items-end gap-3 overflow-x-auto'>
-        <div className='flex min-w-[12rem] flex-col gap-1'>
-          <label
-            htmlFor='txn-account'
-            className='text-sm font-medium text-gray-700'
-          >
-            Account
-          </label>
-          <select
-            id='txn-account'
-            value={accountId}
-            onChange={e => setAccountId(e.target.value)}
-            className={`${inputClasses} w-full`}
-            required
-          >
-            <option value=''>Select account...</option>
-            {accounts.map(account => (
-              <option key={account.id} value={account.id}>
-                {account.name}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className='overflow-x-auto'>
+        <div className='flex items-end gap-3 min-w-0'>
+          <div className='flex min-w-[12rem] flex-col gap-1'>
+            <label
+              htmlFor='txn-account'
+              className='text-sm font-medium text-gray-700'
+            >
+              Account
+            </label>
+            <select
+              id='txn-account'
+              value={accountId}
+              onChange={e => setAccountId(e.target.value)}
+              className={`${inputClasses}`}
+              required
+            >
+              <option value=''>Select account...</option>
+              {accounts.map(account => (
+                <option key={account.id} value={account.id}>
+                  {account.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className='flex min-w-[10rem] flex-col gap-1'>
-          <label
-            htmlFor='txn-date'
-            className='text-sm font-medium text-gray-700'
-          >
-            Date
-          </label>
-          <Input
-            id='txn-date'
-            type='date'
-            value={date}
-            onChange={e => setDate(e.target.value)}
-            className={`${inputClasses} w-full`}
-            required
-          />
-        </div>
+          <div className='flex min-w-[10rem] flex-col gap-1'>
+            <label
+              htmlFor='txn-date'
+              className='text-sm font-medium text-gray-700'
+            >
+              Date
+            </label>
+            <Input
+              id='txn-date'
+              type='date'
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              className={`${inputClasses}`}
+              required
+            />
+          </div>
 
-        <div className='flex min-w-[14rem] flex-1 flex-col gap-1'>
-          <label
-            htmlFor='txn-payee'
-            className='text-sm font-medium text-gray-700'
-          >
-            Payee
-          </label>
-          <Input
-            id='txn-payee'
-            type='text'
-            placeholder='e.g. Grocery Store'
-            value={payeeName}
-            onChange={e => setPayee(e.target.value)}
-            className={`${inputClasses} w-full`}
-            required
-          />
-        </div>
+          <div className='flex min-w-[8rem] flex-1 flex-col gap-1'>
+            <label
+              htmlFor='txn-payee'
+              className='text-sm font-medium text-gray-700'
+            >
+              Payee
+            </label>
+            <Input
+              id='txn-payee'
+              type='text'
+              placeholder='e.g. Grocery Store'
+              value={payeeName}
+              onChange={e => setPayee(e.target.value)}
+              className={`${inputClasses}`}
+              required
+            />
+          </div>
 
-        <div className='flex min-w-[12rem] flex-col gap-1'>
-          <label
-            htmlFor='txn-category'
-            className='text-sm font-medium text-gray-700'
-          >
-            Category
-          </label>
-          <select
-            id='txn-category'
-            value={categoryId}
-            onChange={e => setCategoryId(e.target.value)}
-            className={`${inputClasses} w-full`}
-          >
-            <option value=''>Uncategorized</option>
-            {categories.map(cat => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
-        </div>
+          <div className='flex min-w-[8rem] flex-col gap-1'>
+            <label
+              htmlFor='txn-category'
+              className='text-sm font-medium text-gray-700'
+            >
+              Category
+            </label>
+            <select
+              id='txn-category'
+              value={categoryId}
+              onChange={e => setCategoryId(e.target.value)}
+              className={`${inputClasses}`}
+            >
+              <option value=''>Uncategorized</option>
+              {categories.map(cat => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className='flex min-w-[8rem] flex-col gap-1'>
-          <label
-            htmlFor='txn-amount'
-            className='text-sm font-medium text-gray-700'
-          >
-            Amount
-          </label>
-          <Input
-            id='txn-amount'
-            type='text'
-            inputMode='decimal'
-            placeholder='-12.34'
-            value={amount}
-            onChange={e => setAmount(e.target.value)}
-            className={`${inputClasses} w-full text-right`}
-            required
-          />
-        </div>
+          <div className='flex min-w-[4rem] flex-col gap-1'>
+            <label
+              htmlFor='txn-amount'
+              className='text-sm font-medium text-gray-700'
+            >
+              Amount
+            </label>
+            <Input
+              id='txn-amount'
+              type='text'
+              inputMode='decimal'
+              placeholder='-12.34'
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              className={`${inputClasses} text-right`}
+              required
+            />
+          </div>
 
-        <div className='flex min-w-[12rem] flex-1 flex-col gap-1'>
-          <label
-            htmlFor='txn-memo'
-            className='text-sm font-medium text-gray-700'
-          >
-            Memo
-          </label>
-          <Input
-            id='txn-memo'
-            type='text'
-            placeholder='Optional note'
-            value={memo}
-            onChange={e => setMemo(e.target.value)}
-            className={`${inputClasses} w-full`}
-          />
-        </div>
+          <div className='flex min-w-[4rem] flex-1 flex-col gap-1'>
+            <label
+              htmlFor='txn-memo'
+              className='text-sm font-medium text-gray-700'
+            >
+              Memo
+            </label>
+            <Input
+              id='txn-memo'
+              type='text'
+              placeholder='Optional note'
+              value={memo}
+              onChange={e => setMemo(e.target.value)}
+              className={`${inputClasses} w-full`}
+            />
+          </div>
 
-        <div className='flex min-w-[6rem] items-center gap-2 pt-5'>
-          <Checkbox
+          <div className='flex min-w-[6rem] items-center gap-2 pt-5'>
+            <Checkbox
             // id='txn-cleared'
             // type='checkbox'
             // checked={cleared}
             // onChange={e => setCleared(e.target.checked)}
             // className='h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500'
-          />
-          <label
-            htmlFor='txn-cleared'
-            className='text-sm font-medium text-gray-700'
-          >
-            Cleared
-          </label>
-        </div>
+            />
+            <label
+              htmlFor='txn-cleared'
+              className='text-sm font-medium text-gray-700'
+            >
+              Cleared
+            </label>
+          </div>
 
-        <Button>{isSubmitting ? 'Adding…' : 'Add Transaction'}</Button>
+          <Button>{isSubmitting ? 'Adding…' : 'Add Transaction'}</Button>
+        </div>
       </div>
 
       {error && (

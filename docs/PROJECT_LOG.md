@@ -15,7 +15,7 @@ The minimal version of Envelopes should allow me to:
 
 ## Current Focus
 
-
+- Switch accounts from side bar
 
 ---
 

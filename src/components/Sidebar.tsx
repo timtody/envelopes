@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react'
 import { PanelLeftClose } from 'lucide-react'
 import { invoke } from '@tauri-apps/api/core'
-
-type Account = {
-  id: number
-  name: string
-}
+import { Account } from '@/types'
 
 interface SidebarProps {
   isOpen: boolean
   onClose: () => void
+  selectedAccount: Account | null
+  selectAccount: (id: number, name: string) => void
   animationDuration?: number
   buttonFadeDelay?: number
   buttonFadeDuration?: number
@@ -18,6 +16,8 @@ interface SidebarProps {
 export default function Sidebar ({
   isOpen,
   onClose,
+  selectedAccount,
+  selectAccount,
   animationDuration = 200,
   buttonFadeDelay = 100,
   buttonFadeDuration = 100
@@ -97,23 +97,31 @@ export default function Sidebar ({
               Loading accounts...
             </div>
           )}
-          
+
           {error && (
             <div className='px-3 py-2 text-sm text-destructive'>
               Error: {error}
             </div>
           )}
 
-          {!loading && !error && accounts.map(account => (
-            <a
-              key={account.id}
-              href='#'
-              className='block px-3 py-2 text-sm text-sidebar-foreground hover:bg-sidebar-accent rounded'
-              title={`View ${account.name} transactions`}
-            >
-              {account.name}
-            </a>
-          ))}
+          {!loading &&
+            !error &&
+            accounts.map(account => (
+              <button
+                key={account.id}
+                onClick={() => selectAccount(account.id, account.name)}
+                className={`
+                  w-full text-left px-3 py-2 text-sm rounded transition-colors
+                  ${selectedAccount?.id === account.id 
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold' 
+                    : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
+                  }
+                `}
+                title={`View ${account.name} transactions`}
+              >
+                {account.name}
+              </button>
+            ))}
 
           {!loading && !error && accounts.length === 0 && (
             <div className='px-3 py-2 text-sm text-sidebar-foreground/70'>

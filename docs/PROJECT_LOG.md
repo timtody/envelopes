@@ -15,7 +15,15 @@ The minimal version of Envelopes should allow me to:
 
 ## Current Focus
 
-- Switch accounts from side bar
+- [ ] Switch accounts from side bar
+  - [ ] Selected account lives in app state
+  - [ ] Fast: filter transactions in Frontend?
+    - I see a high risk here: When scrolling in virtual
+    tables I want auto-grow behaviour. This would happen
+    for all accounts then, always. -> better to use prefetch on hover
+  - [ ] Visible: selected account clearly visible
+  - [ ] Persistent? Should I persist the selected account?
+  - [ ] Scale: handle lots of accounts
 
 ---
 

@@ -1,10 +1,5 @@
 # ✉️ Envelopes – Project Log
 
-A lightweight log to track current work, backlog ideas, and design decisions.  
-Keep it simple, keep it close to the code.
-
----
-
 ## MVP Scope
 
 The minimal version of Envelopes should allow me to:
@@ -14,16 +9,22 @@ The minimal version of Envelopes should allow me to:
 - [ ] View transactions per account/month
 - [ ] Assign budget amounts to categories per month
 - [ ] View category balances (Assigned – Spent)
+- [ ] Add sidebar
 
 ---
 
 ## Current Focus
 
 
+
 ---
 
 ## Backlog
 
+- Think about state.... zustand?
+- Introduce form validation (probably zod?)
+- Use shadcn/ui
+- Introduce analzysis
 - Debounce payee inputs
 - Autocomplete payee field (create new payees on the fly)
 - Undo option after adding a transaction

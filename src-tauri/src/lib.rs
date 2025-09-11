@@ -137,6 +137,19 @@ fn list_txns_by_month_full_cmd(
 }
 
 #[tauri::command]
+fn list_txns(db: State<Db>, year: i32) -> Result<Vec<models::TxnFull>, String> {
+    use schema::v_transactions_full;
+    let mut conn = db.pool.get().map_err(|e| e.to_string())?;
+    v_transactions_full::dsl::v_transactions_full
+        .order((
+            v_transactions_full::date.desc(),
+            v_transactions_full::id.asc(),
+        ))
+        .limit(100)
+        .load::<models::TxnFull>(&mut conn)
+}
+
+#[tauri::command]
 fn list_accounts_cmd(db: State<Db>) -> Result<Vec<models::Account>, String> {
     use schema::accounts::dsl::*;
     let mut conn = db.pool.get().map_err(|e| e.to_string())?;
@@ -199,7 +212,8 @@ pub fn run() {
             create_txn_cmd,
             list_txns_by_month_full_cmd,
             list_accounts_cmd,
-            list_categories_cmd
+            list_categories_cmd,
+            list_txns
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
